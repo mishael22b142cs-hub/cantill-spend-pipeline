@@ -1,0 +1,59 @@
+# Company B: metal packaging manufacturer. One AP file spanning 8 ERPs/
+# regions and 25 currencies. No supplier names (vendor_id only) and
+# material_number is mostly a placeholder, so item identity leans on
+# line_description. No approval-status column exists in this file (see
+# DECISIONS.md) - cancellation is detected from offsetting reversal pairs
+# and non-procurement from the account description.
+company: B
+reporting_currency: USD
+taxonomy_file: data/company_B/taxonomy_B.csv
+
+sources:
+  - id: B
+    path: data/company_B/invoice_lines.csv
+    id_column: line_id
+    record_id_prefix: ""
+    amount:
+      column: line_amount
+      kind: net
+    currency:
+      column: currency
+      default: USD
+    date:
+      column: posting_date
+      formats: ["%Y-%m-%d"]
+    supplier:
+      id_column: vendor_id
+      name_column: null
+    # gl_account_description is included as a weak secondary signal for the
+    # ~40% of rows with a blank line_description (see DECISIONS.md)
+    description_columns: [line_description, gl_account_description]
+    code_columns: [material_number]
+    status: null
+    reversal_key_columns: [invoice_number, invoice_line]
+    exclude_rules:
+      - reason: NON_PROCUREMENT
+        column: gl_account_description
+        equals:
+          - "IC06"
+          - "IC Payables"
+          - "I/C Payable"
+          - "IC05"
+          - "IC67"
+          - "IC22"
+          - "IC37"
+          - "IC23"
+          - "FXW"
+          - "F2WU"
+          - "F1W"
+    fx:
+      rate_column: currency_rate
+
+fx:
+  rate_table_file: data/company_B/fx_rates_usd.csv
+
+matching:
+  enabled: false
+
+classification:
+  item_fallback_columns: [vendor_id, gl_account]

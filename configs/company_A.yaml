@@ -1,0 +1,66 @@
+# Company A: mining operations of a chemicals group (ZAR). Two systems:
+# SAP goods receipts (net, has PO number+item) and the AP invoice tool
+# (gross, has status + VAT rate, PO reference typed in several shapes).
+company: A
+reporting_currency: ZAR
+taxonomy_file: data/company_A/taxonomy_A.csv
+
+sources:
+  - id: ERP
+    path: data/company_A/erp_goods_receipts.csv
+    id_column: line_id
+    record_id_prefix: "ERP:"
+    amount:
+      column: value_zar
+      kind: net
+    currency:
+      column: document_currency
+      default: ZAR
+    date:
+      column: posting_date
+      formats: ["%Y-%m-%d"]
+    supplier:
+      id_column: vendor_id
+      name_column: supplier_name
+    description_columns: [material_short_text, service_short_text]
+    code_columns: [material_number]
+    status: null
+    exclude_rules: []
+    match:
+      primary_key_columns: [po_number, po_item]
+
+  - id: TOOL
+    path: data/company_A/invoice_tool_export.csv
+    id_column: tool_record_id
+    record_id_prefix: "TOOL:"
+    amount:
+      column: gross_amount
+      kind: gross
+      vat_rate_column: vat_rate
+      vat_rate_default: 0.15
+    currency:
+      column: currency
+      default: ZAR
+    date:
+      column: invoice_date
+      formats: ["%Y-%m-%d"]
+    supplier:
+      id_column: null
+      name_column: supplier_name_as_captured
+    description_columns: [line_text]
+    code_columns: []
+    status:
+      column: status
+      include_values: [approved, paid]
+      cancelled_values: [cancelled]
+    exclude_rules: []
+    match:
+      ref_column: po_reference
+
+matching:
+  enabled: true
+  primary_source: ERP
+  secondary_source: TOOL
+
+classification:
+  item_fallback_columns: [vendor_id, cost_centre]
