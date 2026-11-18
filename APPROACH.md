@@ -1,5 +1,11 @@
 # Approach
 
+## AI tools used
+
+Claude Code (Anthropic) was used as a development assistant throughout — writing and iterating on
+the pipeline code, tests, and this documentation. No LLM API is called by the shipped tool itself;
+see the classification section below for why.
+
 ## Pipeline
 
 One YAML config per company (`configs/*.yaml`) declares every piece of company-specific knowledge:
